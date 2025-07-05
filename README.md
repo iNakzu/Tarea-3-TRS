@@ -327,10 +327,10 @@ A lo largo de las pruebas de fuzzing y modificación manual de paquetes, se ha e
 
 Los principales hallazgos incluyen:
 
-- **Rechazo de paquetes fuera de contexto:** Todos los intentos de enviar comandos sin una sesión TCP válida fueron descartados por el servidor.
-- **Desconexión inmediata ante comandos inválidos:** Comandos como `NICK` con caracteres no permitidos o secuencias malformadas provocaron un `RST` inmediato, indicando protección contra entradas potencialmente peligrosas.
-- **Simulación incompleta con Scapy:** A pesar de permitir el control fino sobre los paquetes, Scapy no es capaz de mantener una sesión TCP realista debido a la falta de gestión automática del estado de la conexión, lo que limita su uso en pruebas de autenticación completa.
-- **Validación estricta del protocolo IRC:** El servidor no procesa comandos IRC válidos si estos no son enviados en el contexto de una sesión correctamente establecida, sincronizada y autenticada.
+- Todos los intentos de enviar comandos sin una sesión TCP válida fueron descartados por el servidor.
+- Comandos como `NICK` con caracteres no permitidos o secuencias malformadas provocaron un `RST` inmediato, indicando protección contra entradas potencialmente peligrosas.
+- A pesar de permitir el control fino sobre los paquetes, Scapy no es capaz de mantener una sesión TCP realista debido a la falta de gestión automática del estado de la conexión, lo que limita su uso en pruebas de autenticación completa.
+- El servidor no procesa comandos IRC válidos si estos no son enviados en el contexto de una sesión correctamente establecida, sincronizada y autenticada.
 
 Estas observaciones demuestran una implementación rigurosa del protocolo IRC y mecanismos activos de defensa ante intentos de manipulación o abuso del sistema. Las pruebas también resaltan la necesidad de herramientas más avanzadas que simulen de forma realista las sesiones TCP para llevar a cabo fuzzing o testing más profundo de servicios orientados a red.
 
