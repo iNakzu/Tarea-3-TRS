@@ -83,7 +83,7 @@ Se espera que el servidor pueda:
 - Cerrar la conexión por motivos de seguridad.
 - Ignorar el contenido sin generar respuesta alguna.
 
-Se diseñó un script en Python utilizando la biblioteca Scapy para construir y enviar un paquete TCP/IP con una carga útil `PRIVMSG` de 300 caracteres aleatorios. El script se ejecutó en un entorno de red local donde el servidor IRC se encuentra en la dirección IP `172.17.0.2`, puerto `6667`. A continuación se presenta el código utilizado:
+Se utilizo un script en Python utilizando la biblioteca Scapy para construir y enviar un paquete TCP/IP con una carga útil `PRIVMSG` de 300 caracteres aleatorios. El script se ejecutó en un entorno de red local donde el servidor IRC se encuentra en la dirección IP `172.17.0.2`, puerto `6667`. A continuación se presenta el código utilizado:
 
 ```python
 from scapy.all import *
