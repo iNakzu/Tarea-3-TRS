@@ -321,7 +321,7 @@ for cmd in comandos:
 
 ---
 
-# Conclusión General
+# Conclusión
 
 A lo largo de las pruebas de fuzzing y modificación manual de paquetes, se ha evidenciado que el servidor IRC inspeccionado implementa medidas efectivas de seguridad y robustez frente a entradas malformadas, comandos no válidos y conexiones no autorizadas.
 
