@@ -1,6 +1,6 @@
 # TRS Tarea 3: Inyección y Modificación de Tráfico en Protocolo IRC con Scapy
 
-Este proyecto extiende el trabajo realizado en la Tarea 2, enfocándose en el análisis y manipulación del tráfico IRC utilizando **Scapy**. Se estudia el comportamiento del servidor y cliente IRC frente a la inyección o modificación de tráfico no esperado, con el objetivo de explorar vulnerabilidades o reacciones del sistema ante datos anómalos.
+Este proyecto extiende el trabajo realizado en la Tarea 2, enfocándose en el análisis y manipulación del tráfico IRC utilizando Scapy. Se estudia el comportamiento del servidor y cliente IRC frente a la inyección o modificación de tráfico no esperado, con el objetivo de explorar vulnerabilidades o reacciones del sistema ante datos anómalos.
 
 ---
 
@@ -16,7 +16,7 @@ Este proyecto extiende el trabajo realizado en la Tarea 2, enfocándose en el an
 
 ## Información general
 
-El objetivo de esta tarea es interceptar, inyectar y modificar tráfico IRC entre un cliente y un servidor, utilizando herramientas como **Scapy**. A través de estas modificaciones, se pretende observar y documentar los efectos sobre el comportamiento del servicio.
+El objetivo de esta tarea es interceptar, inyectar y modificar tráfico IRC entre un cliente y un servidor, utilizando herramientas como Scapy. A través de estas modificaciones, se pretende observar y documentar los efectos sobre el comportamiento del servicio.
 
 ---
 
@@ -26,7 +26,7 @@ El objetivo de esta tarea es interceptar, inyectar y modificar tráfico IRC entr
 - InspIRCd (Servidor IRC)
 - Irssi (Cliente IRC)
 - Scapy (Python 3)
-- Terminal bash
+- Terminal (bash)
 - Sistema operativo Linux
 
 ---
@@ -73,7 +73,7 @@ docker run -it --name irc-client --network host irssi
 
 Una inyección de tráfico tiene como objetivo evaluar la robustez del protocolo ante entradas malformadas, simulando un comportamiento anómalo o malicioso. Se realizaron dos pruebas de fuzzing.
 
-## Fuzzing 1: Mensaje `PRIVMSG` largo
+## Fuzzing 1: Mensaje PRIVMSG largo
 
 El objetivo de esta prueba es evaluar la robustez del servidor IRC frente a mensajes `PRIVMSG` con longitudes excesivas y caracteres inusuales, simulando una entrada anómala que podría surgir por errores de programación o ataques maliciosos. Se busca observar cómo el servidor maneja este tipo de mensajes: si los rechaza, cierra la conexión, o simplemente los ignora.
 
