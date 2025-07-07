@@ -9,6 +9,7 @@ Este proyecto extiende el trabajo realizado en la Tarea 2, enfocándose en el an
 - [Información general](#información-general)
 - [Tecnologías utilizadas](#tecnologías-utilizadas)
 - [Instalación del entorno desde cero](#instalación-del-entorno-desde-cero)
+- [Intercepción de tráfico con Scapy](#Intercepción-de-tráfico-con-scapy)
 - [Uso de Scapy para inyección y modificación](#uso-de-scapy-para-inyección-y-modificación)
 - [Autores](#autores)
 
@@ -79,14 +80,14 @@ def analizar_paquete(paquete):
     if paquete.haslayer(TCP) and paquete.haslayer(Raw):
         carga = paquete[Raw].load.decode(errors='ignore')
         if any(cmd in carga for cmd in ["PRIVMSG", "JOIN", "NICK"]):
-            print(f"[+] Paquete IRC detectado:")
+            print(f"[+] Mensaje IRC detectado:")
             print(f"    Origen: {paquete[IP].src}")
             print(f"    Destino: {paquete[IP].dst}")
-            print(f"    Contenido: {carga.strip()}")
+            print(f"    Datos: {carga.strip()}")
 
-iface = "docker0"
+iface = "docker0"  # Cambia si usas otra interfaz
 
-print(f"[*] Escuchando en la interfaz {iface}...")
+print(f"[*] Escuchando en interfaz {iface}...")
 
 sniff(iface=iface, filter="tcp port 6667", prn=analizar_paquete, store=0)
 ```
@@ -114,8 +115,13 @@ Se utilizo un script en Python utilizando la biblioteca Scapy para construir y e
 from scapy.all import *
 import random, string
 
+# Construimos un mensaje PRIVMSG con 300 caracteres aleatorios imprimibles
 msg = "PRIVMSG #canal :" + ''.join(random.choices(string.printable, k=300)) + "\r\n"
+
+# Construimos el paquete IP/TCP con destino al servidor IRC
 pkt = IP(dst="172.17.0.2") / TCP(dport=6667, sport=RandShort(), flags="PA") / Raw(load=msg.encode())
+
+# Enviamos el paquete
 send(pkt)
 ```
 
@@ -185,34 +191,43 @@ import time
 ip_dst = "172.17.0.2"
 puerto_dst = 6667
 
-# Generar puerto y número de secuencia aleatorios
+# Generamos un puerto de origen aleatorio y un número de secuencia inicial
 puerto_src = RandShort()
 seq = random.randint(1000, 50000)
 
-# Crear capa IP
-ip = IP(dst=ip_dst)
-
 # 1. Enviar SYN
+ip = IP(dst=ip_dst)
 syn = TCP(sport=puerto_src, dport=puerto_dst, flags='S', seq=seq)
 synack = sr1(ip/syn, timeout=2)
 
 if synack is None or synack[TCP].flags != 'SA':
-    print("No se recibió SYN-ACK. Conexión rechazada o filtrada.")
+    print("No se recibió SYN-ACK. El servidor puede estar cerrado o filtrando.")
     exit()
 
-# 2. Completar el handshake con ACK
+# 2. Calcular ACK y actualizar números de secuencia
 ack_num = synack.seq + 1
 seq_num = seq + 1
+
+# 3. Enviar ACK para completar el handshake
 ack = TCP(sport=puerto_src, dport=puerto_dst, flags='A', seq=seq_num, ack=ack_num)
 send(ip/ack)
 
-# 3. Enviar comando NICK inválido
+# 4. Enviar comando NICK inválido como payload
 payload = b"NICK $$$$$\r\n"
 push_ack = TCP(sport=puerto_src, dport=puerto_dst, flags='PA', seq=seq_num, ack=ack_num)
 send(ip/push_ack/Raw(load=payload))
 
-# 4. Actualizar número de secuencia
+# 5. Actualizar el número de secuencia luego de enviar datos
 seq_num += len(payload)
+
+# 6. Capturar respuesta del servidor (timeout más amplio)
+print("\nEsperando respuestas del servidor...\n")
+respuesta = sniff(filter=f"tcp and src host {ip_dst} and dst port {puerto_src}", timeout=5)
+
+for pkt in respuesta:
+    if pkt.haslayer(Raw):
+        print("Respuesta:", pkt[Raw].load.decode(errors="ignore"))
+
 ```
 ---
 
@@ -255,26 +270,26 @@ syn = TCP(sport=puerto_src, dport=puerto_dst, flags='S', seq=seq)
 synack = sr1(ip/syn, timeout=2)
 
 if not synack or synack[TCP].flags != 'SA':
-    print("No se recibió SYN-ACK")
+    print("No se recibió SYN-ACK. Conexión rechazada o filtrada.")
     exit()
 
-# 2. Completar handshake con ACK
+# 2. Enviar ACK (completar el handshake)
 ack_num = synack.seq + 1
 seq_num = seq + 1
 ack = TCP(sport=puerto_src, dport=puerto_dst, flags='A', seq=seq_num, ack=ack_num)
 send(ip/ack)
 
 # 3. Enviar comando NICK
-nick_payload = b"NICK miNick\r\n"
-push_ack = TCP(sport=puerto_src, dport=puerto_dst, flags='PA', seq=seq_num, ack=ack_num)
-send(ip/push_ack/Raw(load=nick_payload))
-seq_num += len(nick_payload)
+nick_cmd = b"NICK testuser\r\n"
+push_nick = TCP(sport=puerto_src, dport=puerto_dst, flags='PA', seq=seq_num, ack=ack_num)
+send(ip/push_nick/Raw(load=nick_cmd))
+seq_num += len(nick_cmd)
 
 # 4. Enviar comando USER
-user_payload = b"USER miUser 0 * :Mi Nombre\r\n"
-push_ack2 = TCP(sport=puerto_src, dport=puerto_dst, flags='PA', seq=seq_num, ack=ack_num)
-send(ip/push_ack2/Raw(load=user_payload))
-seq_num += len(user_payload)
+user_cmd = b"USER testuser 0 * :Real Name\r\n"
+push_user = TCP(sport=puerto_src, dport=puerto_dst, flags='PA', seq=seq_num, ack=ack_num)
+send(ip/push_user/Raw(load=user_cmd))
+seq_num += len(user_cmd)
 ```
 
 ---
@@ -322,12 +337,9 @@ send(ip/ack)
 
 # 2. Enviar comandos IRC válidos: NICK, USER y JOIN
 comandos = [
-    b"NICK testuser
-",
-    b"USER testuser 0 * :Real Name
-",
-    b"JOIN #canal
-"
+    b"NICK testuser\r\n",
+    b"USER testuser 0 * :Real Name\r\n",
+    b"JOIN #canal\r\n"  # JOIN válido
 ]
 
 for cmd in comandos:
