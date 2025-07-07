@@ -68,6 +68,31 @@ docker run -it --name irc-client --network host irssi
 
 ---
 
+## Intercepcion de trafico con Scapy
+
+Para poder interceptar los paquetes IRC que contienen comandos como `PRIVMSG`, `NICK` o `JOIN` con Scapy, se utilizo el siguiente codigo:
+
+```python
+from scapy.all import sniff, TCP, IP, Raw
+
+def analizar_paquete(paquete):
+    if paquete.haslayer(TCP) and paquete.haslayer(Raw):
+        carga = paquete[Raw].load.decode(errors='ignore')
+        if any(cmd in carga for cmd in ["PRIVMSG", "JOIN", "NICK"]):
+            print(f"[+] Paquete IRC detectado:")
+            print(f"    Origen: {paquete[IP].src}")
+            print(f"    Destino: {paquete[IP].dst}")
+            print(f"    Contenido: {carga.strip()}")
+
+iface = "docker0"
+
+print(f"[*] Escuchando en la interfaz {iface}...")
+
+sniff(iface=iface, filter="tcp port 6667", prn=analizar_paquete, store=0)
+```
+
+En este caso la interfaz indicada es `docker0`, pero esto puede ser diferente en cada computador. Este script debe ejecutarse en la m´aquina encargada del an´alisis de tr´afico y requiere permisos para acceder a la interfaz de red especificada.
+
 ## Uso de Scapy para inyección y modificación
 
 
